@@ -11,6 +11,7 @@ const serviceRequestSchema = new mongoose.Schema({
     enum: ['pending', 'accepted', 'in-progress', 'completed'],
     default: 'pending',
   },
+  photo: { type: String },
 }, { timestamps: true });
 
 module.exports = mongoose.model('ServiceRequest', serviceRequestSchema);

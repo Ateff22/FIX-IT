@@ -10,6 +10,7 @@ exports.createRequest = async (req, res) => {
       description,
       specialty,
       location,
+      photo: req.file ? req.file.path : undefined,
     });
 
     res.status(201).json(request);
@@ -26,6 +27,7 @@ exports.getRequests = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
 exports.completeRequest = async (req, res) => {
   try {
     const request = await ServiceRequest.findById(req.params.id);
