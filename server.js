@@ -2,6 +2,7 @@ require('dotenv').config();
 
 const dns = require('dns');
 dns.setServers(['8.8.8.8', '8.8.4.4']);
+const errorHandler = require('./middleware/errorHandler');
 
 const mongoose = require('mongoose');
 mongoose.connect(process.env.MONGO_URI)
@@ -29,10 +30,16 @@ app.use('/api/offers', offerRoutes);
 const ratingRoutes = require('./routes/ratingRoutes');
 app.use('/api/ratings', ratingRoutes);
 
+const adminRoutes = require('./routes/adminRoutes');
+app.use('/api/admin', adminRoutes);
+
+app.use((req, res) => {
+  res.status(404).json({ message: 'Route not found' });
+});
+
+app.use(errorHandler);
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-
-const adminRoutes = require('./routes/adminRoutes');
-app.use('/api/admin', adminRoutes);
