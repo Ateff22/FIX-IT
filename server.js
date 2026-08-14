@@ -9,6 +9,9 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB connected'))
   .catch(err => console.log(err));
 
+  const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('./swagger.json');
+
 const express = require('express');
 const app = express();
 
@@ -32,6 +35,8 @@ app.use('/api/ratings', ratingRoutes);
 
 const adminRoutes = require('./routes/adminRoutes');
 app.use('/api/admin', adminRoutes);
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
