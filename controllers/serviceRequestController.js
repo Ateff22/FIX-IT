@@ -21,7 +21,14 @@ exports.createRequest = async (req, res) => {
 
 exports.getRequests = async (req, res) => {
   try {
-    const requests = await ServiceRequest.find();
+    const { specialty, status, search } = req.query;
+    const filter = {};
+
+    if (specialty) filter.specialty = specialty;
+    if (status) filter.status = status;
+    if (search) filter.title = { $regex: search, $options: 'i' };
+
+    const requests = await ServiceRequest.find(filter);
     res.json(requests);
   } catch (err) {
     res.status(500).json({ message: err.message });
