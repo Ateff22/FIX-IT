@@ -1,0 +1,126 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "FixIt API",
+    "version": "1.0.0",
+    "description": "Home maintenance service request platform API"
+  },
+  "servers": [
+    { "url": "http://localhost:5000" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "summary": "Register a new user",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": { "name": "Ahmed", "email": "ahmed@test.com", "password": "123456", "role": "customer" }
+            }
+          }
+        },
+        "responses": { "201": { "description": "User created" } }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "Login and get a JWT token",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": { "email": "ahmed@test.com", "password": "123456" }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Returns token" } }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "summary": "Get current authenticated user",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Current user info" } }
+      }
+    },
+    "/api/requests": {
+      "post": {
+        "summary": "Create a service request (customer only)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "201": { "description": "Request created" } }
+      },
+      "get": {
+        "summary": "List service requests, supports specialty/status/search query params",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "List of requests" } }
+      }
+    },
+    "/api/requests/{id}/complete": {
+      "put": {
+        "summary": "Mark request as completed (technician only)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Request marked completed" } }
+      }
+    },
+    "/api/offers": {
+      "post": {
+        "summary": "Submit an offer on a request (technician only)",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": { "requestId": "id", "price": 300, "estimatedTime": "2 hours" }
+            }
+          }
+        },
+        "responses": { "201": { "description": "Offer created" } }
+      }
+    },
+    "/api/offers/{id}/accept": {
+      "put": {
+        "summary": "Accept an offer (customer only)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "Offer accepted" } }
+      }
+    },
+    "/api/ratings": {
+      "post": {
+        "summary": "Rate the technician after completion (customer only)",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": { "requestId": "id", "stars": 5, "comment": "Great service" }
+            }
+          }
+        },
+        "responses": { "201": { "description": "Rating submitted" } }
+      }
+    },
+    "/api/admin/users": {
+      "get": {
+        "summary": "List all users (admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "List of users" } }
+      }
+    },
+    "/api/admin/users/{id}/ban": {
+      "put": {
+        "summary": "Ban or unban a user (admin only)",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": { "200": { "description": "User ban status toggled" } }
+      }
+    }
+  }
+}
