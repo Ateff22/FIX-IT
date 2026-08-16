@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FixIt - Request Details</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+  <div class="navbar">
+    <div class="brand">FixIt</div>
+    <div class="nav-right">
+      <button onclick="window.location.href='customer-dashboard.html'">Back</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div id="requestInfo"><p>Loading...</p></div>
+
+    <h3 style="margin: 25px 0 10px;">Offers</h3>
+    <div class="card-list" id="offersList"></div>
+
+    <div id="ratingSection"></div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) window.location.href = 'login.html';
+
+    const params = new URLSearchParams(window.location.search);
+    const requestId = params.get('id');
+
+    let currentRequest = null;
+
+    async function loadRequest() {
+      const res = await fetch('http://localhost:5000/api/requests', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      const all = await res.json();
+      currentRequest = all.find(r => r._id === requestId);
+
+      if (!currentRequest) {
+        document.getElementById('requestInfo').innerHTML = '<p>Request not found.</p>';
+        return;
+      }
+
+      document.getElementById('requestInfo').innerHTML = `
+        <div class="card">
+          <div class="card-top">
+            <h3>${currentRequest.title}</h3>
+            <span class="badge ${currentRequest.status}">${currentRequest.status}</span>
+          </div>
+          <p>${currentRequest.description}</p>
+          <div class="meta">${currentRequest.specialty} · ${currentRequest.location}</div>
+        </div>
+      `;
+
+      if (currentRequest.status === 'completed') {
+        showRatingForm();
+      }
+    }
+
+    async function loadOffers() {
+      const res = await fetch('http://localhost:5000/api/offers/' + requestId, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      const offers = await res.json();
+
+      const list = document.getElementById('offersList');
+
+      if (!offers.length) {
+        list.innerHTML = '<p>No offers yet.</p>';
+        return;
+      }
+
+      list.innerHTML = offers.map(o => `
+        <div class="card">
+          <div class="card-top">
+            <h3>Price: ${o.price} EGP</h3>
+            <span class="badge ${o.status === 'accepted' ? 'completed' : o.status === 'rejected' ? 'pending' : 'accepted'}">${o.status}</span>
+          </div>
+          <p>Estimated time: ${o.estimatedTime}</p>
+          ${o.status === 'pending' ? `<button class="btn-small" onclick="acceptOffer('${o._id}')">Accept offer</button>` : ''}
+        </div>
+      `).join('');
+    }
+
+    async function acceptOffer(offerId) {
+      const res = await fetch('http://localhost:5000/api/offers/' + offerId + '/accept', {
+        method: 'PUT',
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || 'Could not accept offer');
+        return;
+      }
+
+      loadRequest();
+      loadOffers();
+    }
+
+    function showRatingForm() {
+      document.getElementById('ratingSection').innerHTML = `
+        <h3 style="margin: 25px 0 10px;">Rate this service</h3>
+        <div class="form-card" style="margin: 0;">
+          <label>Stars (1-5)</label>
+          <input type="number" id="stars" min="1" max="5" required>
+          <label>Comment</label>
+          <textarea id="comment" rows="3"></textarea>
+          <button onclick="submitRating()">Submit rating</button>
+        </div>
+      `;
+    }
+
+    async function submitRating() {
+      const stars = document.getElementById('stars').value;
+      const comment = document.getElementById('comment').value;
+
+      const res = await fetch('http://localhost:5000/api/ratings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ requestId, stars: Number(stars), comment })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || 'Could not submit rating');
+        return;
+      }
+
+      alert('Thanks for your rating');
+      document.getElementById('ratingSection').innerHTML = '<p>You already rated this request.</p>';
+    }
+
+    loadRequest();
+    loadOffers();
+  </script>
+
+</body>
+</html>
