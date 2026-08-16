@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FixIt - My Requests</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+  <div class="navbar">
+    <div class="brand">FixIt</div>
+    <div class="nav-right">
+      <span id="userName"></span>
+      <button onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="page-title">
+      <h2>My requests</h2>
+      <div style="display:flex; gap:8px;">
+        <button class="btn-small" onclick="loadRequests()">Refresh</button>
+        <button class="btn-small" onclick="window.location.href='new-request.html'">+ New request</button>
+      </div>
+    </div>
+
+    <div class="card-list" id="requestsList">
+      <p>Loading...</p>
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) window.location.href = 'login.html';
+
+    document.getElementById('userName').textContent = 'Hi, ' + localStorage.getItem('name');
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = 'login.html';
+    }
+
+    async function loadRequests() {
+      try {
+        const res = await fetch('http://localhost:5000/api/requests', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await res.json();
+
+        const list = document.getElementById('requestsList');
+
+        if (!data.length) {
+          list.innerHTML = '<p>No requests yet.</p>';
+          return;
+        }
+
+        list.innerHTML = data.map(r => `
+          <div class="card" onclick="window.location.href='request-detail.html?id=${r._id}'" style="cursor:pointer">
+            <div class="card-top">
+              <h3>${r.title}</h3>
+              <span class="badge ${r.status}">${r.status}</span>
+            </div>
+            <p>${r.description}</p>
+            <div class="meta">${r.specialty} · ${r.location}</div>
+          </div>
+        `).join('');
+
+      } catch (err) {
+        document.getElementById('requestsList').innerHTML = '<p>Could not load requests.</p>';
+      }
+    }
+
+    loadRequests();
+  </script>
+
+</body>
+</html>
