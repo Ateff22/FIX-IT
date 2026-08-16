@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FixIt - Available Requests</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+  <div class="navbar">
+    <div class="brand">FixIt</div>
+    <div class="nav-right">
+      <span id="userName"></span>
+      <button onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="container">
+<div class="page-title">
+      <h2>Available requests</h2>
+      <button class="btn-small" onclick="loadRequests()">Refresh</button>
+    </div>
+
+    <div class="card-list" id="requestsList">
+      <p>Loading...</p>
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) window.location.href = 'login.html';
+
+    document.getElementById('userName').textContent = 'Hi,Tech: ' + localStorage.getItem('name');
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = 'login.html';
+    }
+
+    async function loadRequests() {
+      try {
+        const res = await fetch('http://localhost:5000/api/requests', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await res.json();
+
+        const list = document.getElementById('requestsList');
+
+        if (!data.length) {
+          list.innerHTML = '<p>No requests available.</p>';
+          return;
+        }
+        list.innerHTML = data.map(r => `
+          <div class="card">
+            <div class="card-top">
+              <h3>${r.title}</h3>
+              <span class="badge ${r.status}">${r.status}</span>
+            </div>
+            <p>${r.description}</p>
+            <div class="meta">${r.specialty} · ${r.location}</div>
+            ${r.status !== 'pending' ? `<p style="margin-top:8px; font-size:13px; color:#555;">Customer contact: ${r.customer.name} - ${r.customer.email} - ${r.customer.phone || 'no phone'}</p>` : ''}
+            ${r.photo ? `<img src="http://localhost:5000/${r.photo}" style="max-width:200px; border-radius:8px; margin-top:10px; display:block;">` : ''}
+            <div style="margin-top:12px; display:flex; gap:8px;">
+              <input type="number" placeholder="Price" id="price-${r._id}" style="width:100px; padding:6px; border:1px solid #ddd; border-radius:6px;">
+              <input type="text" placeholder="Estimated time" id="time-${r._id}" style="width:140px; padding:6px; border:1px solid #ddd; border-radius:6px;">
+              ${r.status === 'pending' ? `<button class="btn-small" onclick="sendOffer('${r._id}')">Send offer</button>` : ''}
+              ${r.status === 'accepted' ? `<button class="btn-small" onclick="markComplete('${r._id}')">Mark completed</button>` : ''}
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        document.getElementById('requestsList').innerHTML = '<p>Could not load requests.</p>';
+      }
+    }
+
+    async function sendOffer(requestId) {
+      const price = document.getElementById('price-' + requestId).value;
+      const estimatedTime = document.getElementById('time-' + requestId).value;
+
+      if (!price || !estimatedTime) {
+        alert('Enter price and estimated time first');
+        return;
+      }
+
+      try {
+        const res = await fetch('http://localhost:5000/api/offers', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify({ requestId, price: Number(price), estimatedTime })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          alert(data.message || 'Could not send offer');
+          return;
+        }
+
+        alert('Offer sent');
+
+      } catch (err) {
+        alert('Could not connect to server');
+      }
+    }
+
+    async function markComplete(requestId) {
+      try {
+        const res = await fetch('http://localhost:5000/api/requests/' + requestId + '/complete', {
+          method: 'PUT',
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          alert(data.message || 'Could not update request');
+          return;
+        }
+
+        loadRequests();
+
+      } catch (err) {
+        alert('Could not connect to server');
+      }
+    }
+
+    loadRequests();
+  </script>
+
+</body>
+</html>
