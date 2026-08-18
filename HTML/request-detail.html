@@ -60,7 +60,7 @@
       }
     }
 
-    async function loadOffers() {
+   async function loadOffers() {
       const res = await fetch('http://localhost:5000/api/offers/' + requestId, {
         headers: { 'Authorization': 'Bearer ' + token }
       });
@@ -73,14 +73,48 @@
         return;
       }
 
-      list.innerHTML = offers.map(o => `
+list.innerHTML = offers.map(o => `
         <div class="card">
           <div class="card-top">
-            <h3>Price: ${o.price} EGP</h3>
+            <h3>${o.technician.name} - ${o.price} EGP</h3>
             <span class="badge ${o.status === 'accepted' ? 'completed' : o.status === 'rejected' ? 'pending' : 'accepted'}">${o.status}</span>
           </div>
           <p>Estimated time: ${o.estimatedTime}</p>
-          ${o.status === 'pending' ? `<button class="btn-small" onclick="acceptOffer('${o._id}')">Accept offer</button>` : ''}
+         ${o.status === 'accepted' ? `<p style="font-size:13px; color:#555;">Technician contact: ${o.technician.email} - ${o.technician.phone || 'no phone'}</p>` : ''}
+          <div style="display:flex; gap:8px;">
+            ${o.status === 'pending' ? `<button class="btn-small" onclick="acceptOffer('${o._id}')">Accept offer</button>` : ''}
+            <button class="btn-small" onclick="toggleReviews('${o.technician._id}', this)">See reviews</button>
+          </div>
+          <div class="reviews-box" id="reviews-${o.technician._id}" style="display:none; margin-top:10px;"></div>
+        </div>
+      `).join('');
+   }
+
+    async function toggleReviews(technicianId, btn) {
+      const box = document.getElementById('reviews-' + technicianId);
+
+      if (box.style.display === 'block') {
+        box.style.display = 'none';
+        return;
+      }
+
+      box.style.display = 'block';
+      box.innerHTML = 'Loading reviews...';
+
+      const res = await fetch('http://localhost:5000/api/ratings/technician/' + technicianId, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      const reviews = await res.json();
+
+      if (!reviews.length) {
+        box.innerHTML = '<p style="font-size:13px; color:#888;">No reviews yet.</p>';
+        return;
+      }
+
+      box.innerHTML = reviews.map(r => `
+        <div style="border-top:1px solid #eee; padding-top:8px; margin-top:8px; font-size:13px;">
+          <strong>${r.customer.name}</strong> - ${r.stars} stars<br>
+          <span style="color:#555;">${r.comment || ''}</span>
         </div>
       `).join('');
     }

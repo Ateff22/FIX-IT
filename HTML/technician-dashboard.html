@@ -16,8 +16,9 @@
   </div>
 
   <div class="container">
-    <div class="page-title">
+<div class="page-title">
       <h2>Available requests</h2>
+      <button class="btn-small" onclick="loadRequests()">Refresh</button>
     </div>
 
     <div class="card-list" id="requestsList">
@@ -49,7 +50,6 @@
           list.innerHTML = '<p>No requests available.</p>';
           return;
         }
-
         list.innerHTML = data.map(r => `
           <div class="card">
             <div class="card-top">
@@ -58,15 +58,16 @@
             </div>
             <p>${r.description}</p>
             <div class="meta">${r.specialty} · ${r.location}</div>
+            ${r.status !== 'pending' ? `<p style="margin-top:8px; font-size:13px; color:#555;">Customer contact: ${r.customer.name} - ${r.customer.email} - ${r.customer.phone || 'no phone'}</p>` : ''}
+            ${r.photo ? `<img src="http://localhost:5000/${r.photo}" style="max-width:200px; border-radius:8px; margin-top:10px; display:block;">` : ''}
             <div style="margin-top:12px; display:flex; gap:8px;">
               <input type="number" placeholder="Price" id="price-${r._id}" style="width:100px; padding:6px; border:1px solid #ddd; border-radius:6px;">
               <input type="text" placeholder="Estimated time" id="time-${r._id}" style="width:140px; padding:6px; border:1px solid #ddd; border-radius:6px;">
-              <button class="btn-small" onclick="sendOffer('${r._id}')">Send offer</button>
-              <button class="btn-small" onclick="markComplete('${r._id}')">Mark completed</button>
+              ${r.status === 'pending' ? `<button class="btn-small" onclick="sendOffer('${r._id}')">Send offer</button>` : ''}
+              ${r.status === 'accepted' ? `<button class="btn-small" onclick="markComplete('${r._id}')">Mark completed</button>` : ''}
             </div>
           </div>
         `).join('');
-
       } catch (err) {
         document.getElementById('requestsList').innerHTML = '<p>Could not load requests.</p>';
       }

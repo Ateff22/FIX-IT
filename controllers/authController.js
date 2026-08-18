@@ -4,7 +4,7 @@ const User = require('../models/user');
 
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, phone } = req.body;
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -13,6 +13,7 @@ exports.register = async (req, res) => {
       email,
       password: hashedPassword,
       role,
+      phone,
     });
 
     res.status(201).json({ id: user._id, name: user.name, email: user.email, role: user.role });
@@ -27,6 +28,10 @@ exports.login = async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: 'Invalid email or password' });
+
+    if (!user.isActive) {
+      return res.status(403).json({ message: 'you have been BANNED' });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ message: 'Invalid email or password' });

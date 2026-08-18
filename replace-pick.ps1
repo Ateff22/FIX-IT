@@ -1,0 +1,1 @@
+(Get-Content $args[0]) -replace '^pick','edit' | Set-Content $args[0]

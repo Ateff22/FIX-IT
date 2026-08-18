@@ -38,3 +38,12 @@ exports.acceptOffer = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+exports.getOffersForRequest = async (req, res) => {
+  try {
+    const offers = await Offer.find({ request: req.params.requestId }).populate('technician', 'name email phone');
+    res.json(offers);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};

@@ -27,3 +27,12 @@ exports.submitRating = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+exports.getTechnicianReviews = async (req, res) => {
+  try {
+    const reviews = await Rating.find({ technician: req.params.technicianId }).populate('customer', 'name');
+    res.json(reviews);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
