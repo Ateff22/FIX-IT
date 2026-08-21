@@ -23,12 +23,12 @@ exports.createRequest = async (req, res) => {
 
 exports.getRequests = async (req, res) => {
   try {
-    const { specialty, status, search } = req.query;
+//    const { specialty, status, search } = req.query;
     const filter = {};
 
-    if (specialty) filter.specialty = specialty;
-    if (status) filter.status = status;
-    if (search) filter.title = { $regex: search, $options: 'i' };
+//    if (specialty) filter.specialty = specialty;
+//    if (status) filter.status = status;
+//    if (search) filter.title = { $regex: search, $options: 'i' };
 
     if (req.user.role === 'technician') {
       const myOffers = await Offer.find({ technician: req.user.id, status: 'accepted' }).select('request');
