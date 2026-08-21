@@ -40,6 +40,24 @@
           <option value="technician">Technician</option>
         </select>
 
+        <div id="specialtyField" style="display:none;">
+          <label>Your specialty</label>
+          <select id="specialty">
+        <option value="plumber">Plumber</option>
+        <option value="electrician">Electrician</option>
+        <option value="ac-technician">AC Technician</option>
+        <option value="carpenter">Carpenter</option>
+        <option value="painter">Painter</option>
+        <option value="mason">Mason</option>
+        <option value="appliance-technician">Appliance Technician</option>
+        <option value="locksmith">Locksmith</option>
+        <option value="glass-aluminum-technician">Glass &amp; Aluminum Technician</option>
+        <option value="cleaning-technician">Cleaning Technician</option>
+        <option value="gardener">Gardener</option>
+        <option value="electronics-technician">Electronics Technician</option>
+          </select>
+        </div>
+
         <button type="submit">Create account</button>
       </form>
 
@@ -48,6 +66,15 @@
   </div>
 
   <script>
+    const roleSelect = document.getElementById('role');
+    const specialtyField = document.getElementById('specialtyField');
+
+    function toggleSpecialty() {
+      specialtyField.style.display = roleSelect.value === 'technician' ? 'block' : 'none';
+    }
+    roleSelect.addEventListener('change', toggleSpecialty);
+    toggleSpecialty();
+
     document.getElementById('registerForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
@@ -56,12 +83,13 @@
       const password = document.getElementById('password').value;
       const phone = document.getElementById('phone').value;
       const role = document.getElementById('role').value;
+      const specialty = role === 'technician' ? document.getElementById('specialty').value : undefined;
 
       try {
         const res = await fetch('http://localhost:5000/api/auth/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, password, role,phone })
+          body: JSON.stringify({ name, email, password, role, phone, specialty })
         });
 
         const data = await res.json();

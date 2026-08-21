@@ -30,7 +30,7 @@
     const token = localStorage.getItem('token');
     if (!token) window.location.href = 'login.html';
 
-    document.getElementById('userName').textContent = 'Hi, ' + localStorage.getItem('name');
+    document.getElementById('userName').textContent = 'Hi,Tech: ' + localStorage.getItem('name');
 
     function logout() {
       localStorage.clear();
@@ -39,9 +39,10 @@
 
     async function loadRequests() {
       try {
+        
         const res = await fetch('http://localhost:5000/api/requests', {
           headers: { 'Authorization': 'Bearer ' + token }
-        });
+});
         const data = await res.json();
 
         const list = document.getElementById('requestsList');

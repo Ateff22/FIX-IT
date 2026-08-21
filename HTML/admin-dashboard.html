@@ -26,12 +26,13 @@
           <th>Name</th>
           <th>Email</th>
           <th>Role</th>
+          <th>Specialty</th>
           <th>Status</th>
           <th>Action</th>
         </tr>
       </thead>
       <tbody id="usersBody">
-        <tr><td colspan="5">Loading...</td></tr>
+        <tr><td colspan="6">Loading...</td></tr>
       </tbody>
     </table>
 
@@ -52,13 +53,32 @@
         <tr><td colspan="4">Loading...</td></tr>
       </tbody>
     </table>
+
+    <div class="page-title" style="margin-top: 40px;">
+      <h2>All reviews</h2>
+    </div>
+
+    <table id="ratingsTable">
+      <thead>
+        <tr>
+          <th>Customer</th>
+          <th>Technician</th>
+          <th>Stars</th>
+          <th>Comment</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="ratingsBody">
+        <tr><td colspan="5">Loading...</td></tr>
+      </tbody>
+    </table>
   </div>
 
   <script>
     const token = localStorage.getItem('token');
     if (!token) window.location.href = 'login.html';
 
-    document.getElementById('userName').textContent = 'Hi, ' + localStorage.getItem('name');
+    document.getElementById('userName').textContent = 'Hi,Admin: ' + localStorage.getItem('name');
 
     function logout() {
       localStorage.clear();
@@ -77,13 +97,14 @@
             <td>${u.name}</td>
             <td>${u.email}</td>
             <td>${u.role}</td>
+            <td>${u.role === 'technician' ? (u.specialty || 'Not set') : '-'}</td>
             <td>${u.isActive ? 'Active' : 'Banned'}</td>
             <td><button class="btn-small" onclick="toggleBan('${u._id}')">${u.isActive ? 'Ban' : 'Unban'}</button></td>
           </tr>
         `).join('');
 
       } catch (err) {
-        document.getElementById('usersBody').innerHTML = '<tr><td colspan="5">Could not load users.</td></tr>';
+        document.getElementById('usersBody').innerHTML = '<tr><td colspan="6">Could not load users.</td></tr>';
       }
     }
 
@@ -150,8 +171,53 @@
       }
     }
 
+    async function loadRatings() {
+      try {
+        const res = await fetch('http://localhost:5000/api/admin/ratings', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await res.json();
+
+        document.getElementById('ratingsBody').innerHTML = data.map(r => `
+          <tr>
+            <td>${r.customer ? r.customer.name : 'N/A'}</td>
+            <td>${r.technician ? r.technician.name : 'N/A'}</td>
+            <td>${r.stars}</td>
+            <td>${r.comment || ''}</td>
+            <td><button class="btn-small" onclick="deleteRating('${r._id}')">Delete</button></td>
+          </tr>
+        `).join('');
+
+      } catch (err) {
+        document.getElementById('ratingsBody').innerHTML = '<tr><td colspan="5">Could not load reviews.</td></tr>';
+      }
+    }
+
+    async function deleteRating(id) {
+      if (!confirm('Delete this review?')) return;
+
+      try {
+        const res = await fetch('http://localhost:5000/api/admin/ratings/' + id, {
+          method: 'DELETE',
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+
+        if (!res.ok) {
+          const data = await res.json();
+          alert(data.message || 'Could not delete review');
+          return;
+        }
+
+        loadRatings();
+
+      } catch (err) {
+        alert('Could not connect to server');
+      }
+    }
+
     loadUsers();
     loadRequests();
+    loadRatings();
   </script>
 
 </body>

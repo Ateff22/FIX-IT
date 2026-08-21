@@ -5,8 +5,9 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   phone: { type: String },
+  specialty: { type: String },
  role: { type: String, enum: ['customer', 'technician', 'admin'], required: true },
-isActive: { type: Boolean, default: true }, //== يشيك عالبان
+isActive: { type: Boolean, default: true }, 
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

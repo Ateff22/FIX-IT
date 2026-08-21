@@ -12,6 +12,12 @@ exports.submitRating = async (req, res) => {
       return res.status(400).json({ message: 'Request is not completed yet' });
     }
 
+    const existingRating = await Rating.findOne({ request: requestId });
+    if (existingRating) {
+     return res.status(400).json({ message: 'This request has already been rated' });
+    }
+
+
     const offer = await require('../models/offer').findOne({ request: requestId, status: 'accepted' });
 
     const rating = await Rating.create({

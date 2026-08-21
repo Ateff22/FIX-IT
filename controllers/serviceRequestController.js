@@ -23,12 +23,18 @@ exports.createRequest = async (req, res) => {
 
 exports.getRequests = async (req, res) => {
   try {
-    const { specialty, status, search } = req.query;
     const filter = {};
 
-    if (specialty) filter.specialty = specialty;
-    if (status) filter.status = status;
-    if (search) filter.title = { $regex: search, $options: 'i' };
+    if (req.user.role === 'technician') {
+      const myOffers = await Offer.find({ technician: req.user.id, status: 'accepted' }).select('request');
+      const myRequestIds = myOffers.map(o => o.request);
+      filter.$or = [
+        { status: 'pending' },
+        { _id: { $in: myRequestIds } }
+      ];
+    } else if (req.user.role === 'customer') {
+      filter.customer = req.user.id;
+    }
 
     const requests = await ServiceRequest.find(filter).populate('customer', 'name email phone');
     res.json(requests);
@@ -46,6 +52,11 @@ exports.completeRequest = async (req, res) => {
       return res.status(400).json({ message: 'Request must be accepted before it can be marked completed' });
     }
 
+    const acceptedOffer = await Offer.findOne({ request: request._id, status: 'accepted' });
+    if (!acceptedOffer || acceptedOffer.technician.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'You are not the technician assigned to this request' });
+    }
+
     request.status = 'completed';
     await request.save();
 
@@ -54,7 +65,6 @@ exports.completeRequest = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
 
 
 exports.deleteRequest = async (req, res) => {
