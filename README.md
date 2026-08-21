@@ -1,8 +1,6 @@
 # FixIt
 
-FixIt is a backend REST API for a home maintenance service platform. Customers post a service request when something breaks at home (washing machine, AC, plumbing, etc), technicians in that specialty send offers, the customer picks one, and after the job is done the customer rates the technician.
-
-This is our final project for the iTi Node.js Bootcamp.
+FixIt is a home maintenance service platform that connects customers with technicians across multiple specialties (plumbing, electrical, AC repair, and more). Built as a final project for the iTi Node.js Bootcamp.
 
 ## Team
 
@@ -14,105 +12,74 @@ This is our final project for the iTi Node.js Bootcamp.
 
 ## Tech Stack
 
-- Node.js
-- Express.js
+- Node.js / Express
 - MongoDB with Mongoose
-- JWT for authentication
-- bcryptjs for password hashing
+- JWT authentication
 - Multer for file uploads
-- express-validator for input validation
-- dotenv for environment variables
+- Vanilla HTML/CSS/JS frontend
 
-## Roles
+## Features
 
-There are 3 roles: customer, technician and admin. What each one can do:
+- Role-based accounts: customer, technician, admin
+- Customers create service requests with title, description, specialty, location, and optional photo
+- Technicians browse pending requests filtered by specialty, status, or title search
+- Technicians submit offers (price + estimated time); customers accept one offer per request
+- Atomic offer acceptance prevents race conditions when multiple technicians offer at once
+- Technicians mark accepted jobs as completed (ownership-checked, only the assigned technician can complete)
+- Customers rate technicians after a job is completed (one rating per request)
+- Admin dashboard: manage users (ban/unban), view and delete requests, view and delete reviews
+- Role-based visibility: customers only see their own requests, technicians see pending requests plus their own accepted/completed jobs, admins see everything
+- File upload validation on request photos (type and size limits)
 
-**Customer**
-- register / login
-- create a service request (can attach a photo of the problem)
-- view requests
-- accept an offer from a technician
-- rate the technician after the request is completed
+## Specialties
 
-**Technician**
-- register / login
-- view requests
-- submit an offer on a request
-- mark a request as completed
-
-**Admin**
-- view all users
-- ban / unban a user
-
-## Setup
-
-1. Clone the repo
-2. Run `npm install`
-3. Copy `.env.example` to `.env` and fill in your own values (Mongo URI, JWT secret, port)
-4. Run `npm start` (or `npm run dev` to auto restart on changes)
-
-Server runs on `http://localhost:5000` by default.
-
-## Environment Variables
-
-```
-PORT=5000
-MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_secret_key
-```
+Plumber, Electrician, AC Technician, Carpenter, Painter, Mason, Appliance Technician, Locksmith, Glass & Aluminum Technician, Cleaning Technician, Gardener, Electronics Technician
 
 ## Project Structure
 
 ```
-controllers/   route logic
-models/        mongoose schemas
-routes/        express routers
-middleware/    auth, validation, upload, error handling
-uploads/       uploaded photos (not committed)
-server.js      app entry point
+controllers/    business logic (auth, serviceRequest, offer, rating, admin)
+middleware/      auth (protect, authorize), validators, upload, error handler
+models/          Mongoose schemas (user, serviceRequest, offer, rating)
+routes/          Express route definitions
+HTML/            frontend pages (login, register, dashboards, request detail)
+uploads/         uploaded request photos
+server.js        app entry point, wires all routes together
 ```
 
-## API Endpoints
+## Setup
 
-### Auth
-| Method | Endpoint | Access | Description |
-|---|---|---|---|
-| POST | /api/auth/register | Public | register a new user |
-| POST | /api/auth/login | Public | login, returns JWT |
-| GET | /api/auth/me | Logged in | returns current user info from token |
+1. Clone the repo and install dependencies:
+   ```
+   npm install
+   ```
+2. Create a `.env` file with:
+   ```
+   MONGO_URI=your_mongodb_connection_string
+   JWT_SECRET=your_secret
+   PORT=5000
+   ```
+3. Start the server:
+   ```
+   node server.js
+   ```
+4. Open `HTML/index.html` in a browser, or serve the `HTML` folder statically.
 
-### Service Requests
-| Method | Endpoint | Access | Description |
-|---|---|---|---|
-| POST | /api/requests | Customer | create a request, photo optional |
-| GET | /api/requests | Logged in | list requests, supports `?specialty=`, `?status=`, `?search=` |
-| PUT | /api/requests/:id/complete | Technician | mark request as completed |
+## API Overview
 
-### Offers
-| Method | Endpoint | Access | Description |
-|---|---|---|---|
-| POST | /api/offers | Technician | submit an offer on a request |
-| PUT | /api/offers/:id/accept | Customer | accept an offer, rejects the rest automatically |
+- `POST /api/auth/register` — create an account
+- `POST /api/auth/login` — get a JWT
+- `GET /api/auth/me` — get current user
+- `GET /api/requests` — list requests (supports `?specialty=&status=&search=` query params)
+- `POST /api/requests` — create a request (customer only)
+- `PUT /api/requests/:id/complete` — mark completed (assigned technician only)
+- `DELETE /api/requests/:id` — delete a request and its related offers/ratings (admin)
+- `POST /api/offers` — submit an offer (technician)
+- `PUT /api/offers/:id/accept` — accept an offer (customer, request owner)
+- `POST /api/ratings` — rate a technician after job completion
+- `GET /api/admin/users`, `PUT /api/admin/users/:id/ban` — manage users
+- `GET /api/admin/ratings`, `DELETE /api/admin/ratings/:id` — manage reviews
 
-### Ratings
-| Method | Endpoint | Access | Description |
-|---|---|---|---|
-| POST | /api/ratings | Customer | rate the technician, only if request is completed |
+## API Documentation
 
-### Admin
-| Method | Endpoint | Access | Description |
-|---|---|---|---|
-| GET | /api/admin/users | Admin | list all users |
-| PUT | /api/admin/users/:id/ban | Admin | ban or unban a user |
-
-All protected routes need this header:
-```
-Authorization: Bearer <token>
-```
-Token comes from the login response.
-
-## Notes
-
-- Password validation and error handling is currently only on the register endpoint, not every endpoint yet.
-- Search & filter is on the GET requests endpoint only.
-- Uploaded photos are stored locally in the `uploads` folder, not on cloud storage.
+Full request/response details are available in `swagger.json` and the Postman collection `FixIt.postman_collection.json`.
