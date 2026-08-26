@@ -41,3 +41,26 @@ if (useCloudinary) {
       cb(null);
     }
   }
+
+  storage = new CloudinaryStorageEngine();
+  console.log('Uploads: using Cloudinary storage');
+} else {
+  storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, 'uploads/');
+    },
+    filename: (req, file, cb) => {
+      cb(null, Date.now() + '-' + file.originalname);
+    },
+  });
+
+  console.log('Uploads: using local disk storage (set CLOUDINARY_* env vars to use Cloudinary instead)');
+}
+
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
+});
+
+module.exports = upload;
