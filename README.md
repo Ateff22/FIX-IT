@@ -6,9 +6,6 @@ FixIt is a home maintenance service platform that connects customers with techni
 
 - Atef Mohamed
 - Haidy Yousef
-- Aya Ehab
-- Malak Waleed
-- Sherif Ahmed
 
 ## Tech Stack
 
